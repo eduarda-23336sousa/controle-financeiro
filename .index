@@ -1,0 +1,692 @@
+```html
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Painel Financeiro</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:system-ui,-apple-system,BlinkMacSystemFont;
+}
+
+body{
+background:#f1f5f9;
+display:flex;
+min-height:100vh;
+}
+
+/* SIDEBAR */
+
+.sidebar{
+width:230px;
+background:#111827;
+color:white;
+padding:24px;
+}
+
+.logo{
+font-size:20px;
+font-weight:600;
+margin-bottom:25px;
+}
+
+.nav button{
+width:100%;
+padding:12px;
+margin-bottom:6px;
+border:none;
+border-radius:8px;
+background:none;
+color:#d1d5db;
+cursor:pointer;
+text-align:left;
+}
+
+.nav button:hover{
+background:#1f2937;
+color:white;
+}
+
+/* MAIN */
+
+.main{
+flex:1;
+padding:30px;
+}
+
+/* HEADER */
+
+.header{
+font-size:24px;
+font-weight:600;
+margin-bottom:20px;
+}
+
+/* CARDS */
+
+.cards{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+gap:16px;
+margin-bottom:25px;
+}
+
+.card{
+background:white;
+padding:18px;
+border-radius:12px;
+box-shadow:0 6px 16px rgba(0,0,0,0.05);
+}
+
+.card h4{
+font-size:13px;
+color:#6b7280;
+margin-bottom:6px;
+}
+
+.card p{
+font-size:24px;
+font-weight:600;
+}
+
+/* TABLE */
+
+.table-container{
+background:white;
+border-radius:12px;
+overflow:auto;
+box-shadow:0 6px 16px rgba(0,0,0,0.05);
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+min-width:650px;
+}
+
+th{
+background:#f9fafb;
+padding:12px;
+font-size:13px;
+text-align:left;
+border-bottom:1px solid #eee;
+}
+
+td{
+padding:12px;
+border-bottom:1px solid #eee;
+font-size:14px;
+}
+
+button{
+cursor:pointer;
+}
+
+.btn{
+padding:6px 10px;
+border:none;
+border-radius:6px;
+color:white;
+}
+
+.delete{
+background:#ef4444;
+}
+
+.sell{
+background:#16a34a;
+}
+
+.update{
+background:#2563eb;
+}
+
+/* FORM */
+
+.form{
+background:white;
+padding:20px;
+border-radius:12px;
+margin-bottom:20px;
+box-shadow:0 6px 16px rgba(0,0,0,0.05);
+}
+
+.form-grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+gap:10px;
+}
+
+input,select{
+padding:10px;
+border:1px solid #ddd;
+border-radius:6px;
+}
+
+.save{
+margin-top:10px;
+padding:10px;
+border:none;
+border-radius:6px;
+background:#2563eb;
+color:white;
+}
+
+/* PAGES */
+
+.page{
+display:none;
+}
+
+/* MOBILE */
+
+@media(max-width:800px){
+
+body{
+flex-direction:column;
+}
+
+.sidebar{
+width:100%;
+display:flex;
+overflow-x:auto;
+}
+
+.logo{
+display:none;
+}
+
+.nav{
+display:flex;
+gap:6px;
+}
+
+.main{
+padding:15px;
+}
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+
+<div class="logo">Painel</div>
+
+<div class="nav">
+
+<button onclick="show('dashboard')">Dashboard</button>
+<button onclick="show('aparelhos')">Aparelhos</button>
+<button onclick="show('cartas')">Cartas</button>
+<button onclick="show('lancamentos')">Lançamentos</button>
+
+</div>
+
+</div>
+
+<div class="main">
+
+<!-- DASHBOARD -->
+
+<div id="dashboard" class="page">
+
+<div class="header">Dashboard</div>
+
+<div class="cards">
+
+<div class="card">
+<h4>Aparelhos Estoque</h4>
+<p id="estoqueAparelhos">0</p>
+</div>
+
+<div class="card">
+<h4>Aparelhos Vendidos</h4>
+<p id="vendidos">0</p>
+</div>
+
+<div class="card">
+<h4>Cartas Ativas</h4>
+<p id="cartasAtivas">0</p>
+</div>
+
+<div class="card">
+<h4>Cartas Contempladas</h4>
+<p id="cartasContempladas">0</p>
+</div>
+
+<div class="card">
+<h4>Capital Investido</h4>
+<p id="capital">0</p>
+</div>
+
+<div class="card">
+<h4>Lucro Aparelhos</h4>
+<p id="lucroAparelhos">0</p>
+</div>
+
+<div class="card">
+<h4>Lucro Cartas</h4>
+<p id="lucroCartas">0</p>
+</div>
+
+<div class="card">
+<h4>Lucro Total</h4>
+<p id="lucroTotal">0</p>
+</div>
+
+</div>
+
+<canvas id="grafico"></canvas>
+
+</div>
+
+<!-- APARELHOS -->
+
+<div id="aparelhos" class="page">
+
+<div class="header">Aparelhos</div>
+
+<div class="table-container">
+
+<table>
+
+<thead>
+
+<tr>
+<th>Modelo</th>
+<th>Compra</th>
+<th>Pago</th>
+<th>Venda</th>
+<th>Status</th>
+<th>Lucro</th>
+<th></th>
+</tr>
+
+</thead>
+
+<tbody id="listaAparelhos"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
+<!-- CARTAS -->
+
+<div id="cartas" class="page">
+
+<div class="header">Cartas</div>
+
+<div class="table-container">
+
+<table>
+
+<thead>
+
+<tr>
+<th>Valor</th>
+<th>Parcela</th>
+<th>Início</th>
+<th>Contemplação</th>
+<th>Pago</th>
+<th>Venda</th>
+<th>Lucro</th>
+<th></th>
+</tr>
+
+</thead>
+
+<tbody id="listaCartas"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
+<!-- LANÇAMENTOS -->
+
+<div id="lancamentos" class="page">
+
+<div class="header">Lançamentos</div>
+
+<div class="form">
+
+<h3>Novo Aparelho</h3>
+
+<div class="form-grid">
+
+<input id="modelo" placeholder="Modelo">
+
+<input id="dataCompra" type="date">
+
+<input id="valorPago" placeholder="Valor pago">
+
+</div>
+
+<button class="save" onclick="addAparelho()">Salvar</button>
+
+</div>
+
+<div class="form">
+
+<h3>Nova Carta</h3>
+
+<div class="form-grid">
+
+<input id="valorCarta" placeholder="Valor carta">
+
+<input id="adesao" placeholder="Adesão">
+
+<input id="parcela" placeholder="Parcela">
+
+<input id="mesInicio" placeholder="Mês início">
+
+</div>
+
+<button class="save" onclick="addCarta()">Salvar</button>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+/* FORMATAR */
+
+function moeda(v){
+return v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
+}
+
+/* STORAGE */
+
+let aparelhos = JSON.parse(localStorage.getItem("aparelhos")) || []
+let cartas = JSON.parse(localStorage.getItem("cartas")) || []
+
+let chart
+
+/* NAV */
+
+function show(page){
+
+document.querySelectorAll(".page").forEach(p=>p.style.display="none")
+
+document.getElementById(page).style.display="block"
+
+update()
+
+}
+
+/* APARELHOS */
+
+function addAparelho(){
+
+let modelo=document.getElementById("modelo").value
+let dataCompra=document.getElementById("dataCompra").value
+let valorPago=Number(document.getElementById("valorPago").value)
+
+aparelhos.push({
+modelo,
+dataCompra,
+valorPago,
+valorVenda:null,
+status:"Estoque"
+})
+
+localStorage.setItem("aparelhos",JSON.stringify(aparelhos))
+
+update()
+
+}
+
+function venderAparelho(i){
+
+let venda=prompt("Valor de venda:")
+
+if(!venda)return
+
+aparelhos[i].valorVenda=Number(venda)
+
+aparelhos[i].status="Vendido"
+
+localStorage.setItem("aparelhos",JSON.stringify(aparelhos))
+
+update()
+
+}
+
+function removerAparelho(i){
+
+aparelhos.splice(i,1)
+
+localStorage.setItem("aparelhos",JSON.stringify(aparelhos))
+
+update()
+
+}
+
+/* CARTAS */
+
+function addCarta(){
+
+let valorCarta=Number(document.getElementById("valorCarta").value)
+let adesao=Number(document.getElementById("adesao").value)
+let parcela=Number(document.getElementById("parcela").value)
+let mesInicio=Number(document.getElementById("mesInicio").value)
+
+cartas.push({
+valorCarta,
+adesao,
+parcela,
+mesInicio,
+mesContemplacao:null,
+valorVenda:null
+})
+
+localStorage.setItem("cartas",JSON.stringify(cartas))
+
+update()
+
+}
+
+function contemplarCarta(i){
+
+let mes=prompt("Mês contemplação:")
+let venda=prompt("Valor venda carta:")
+
+cartas[i].mesContemplacao=Number(mes)
+cartas[i].valorVenda=Number(venda)
+
+localStorage.setItem("cartas",JSON.stringify(cartas))
+
+update()
+
+}
+
+function removerCarta(i){
+
+cartas.splice(i,1)
+
+localStorage.setItem("cartas",JSON.stringify(cartas))
+
+update()
+
+}
+
+/* UPDATE */
+
+function update(){
+
+let listaAparelhos=document.getElementById("listaAparelhos")
+
+listaAparelhos.innerHTML=""
+
+let lucroAparelhos=0
+
+let capital=0
+
+aparelhos.forEach((a,i)=>{
+
+capital+=a.valorPago
+
+let lucro=0
+
+if(a.status==="Vendido"){
+
+lucro=a.valorVenda-a.valorPago
+
+lucroAparelhos+=lucro
+
+}
+
+listaAparelhos.innerHTML+=`
+
+<tr>
+
+<td>${a.modelo}</td>
+<td>${a.dataCompra}</td>
+<td>${moeda(a.valorPago)}</td>
+<td>${a.valorVenda?moeda(a.valorVenda):"-"}</td>
+<td>${a.status}</td>
+
+<td style="color:${lucro>=0?'green':'red'}">
+
+${a.status==="Vendido"?moeda(lucro):"-"}
+
+</td>
+
+<td>
+
+${a.status==="Estoque"?
+`<button class="btn sell" onclick="venderAparelho(${i})">Vender</button>`:""}
+
+<button class="btn delete" onclick="removerAparelho(${i})">X</button>
+
+</td>
+
+</tr>
+
+`
+
+})
+
+/* CARTAS */
+
+let listaCartas=document.getElementById("listaCartas")
+
+listaCartas.innerHTML=""
+
+let lucroCartas=0
+
+cartas.forEach((c,i)=>{
+
+let pago=0
+let lucro=0
+
+if(c.mesContemplacao){
+
+let mesesPagos=c.mesContemplacao-c.mesInicio
+
+pago=c.adesao+(c.parcela*mesesPagos)
+
+lucro=c.valorVenda-pago
+
+lucroCartas+=lucro
+
+}
+
+listaCartas.innerHTML+=`
+
+<tr>
+
+<td>${moeda(c.valorCarta)}</td>
+
+<td>${moeda(c.parcela)}</td>
+
+<td>${c.mesInicio}</td>
+
+<td>${c.mesContemplacao||"-"}</td>
+
+<td>${pago?moeda(pago):"-"}</td>
+
+<td>${c.valorVenda?moeda(c.valorVenda):"-"}</td>
+
+<td style="color:${lucro>=0?'green':'red'}">
+
+${lucro?moeda(lucro):"-"}
+
+</td>
+
+<td>
+
+${!c.mesContemplacao?
+`<button class="btn update" onclick="contemplarCarta(${i})">Contemplar</button>`:""}
+
+<button class="btn delete" onclick="removerCarta(${i})">X</button>
+
+</td>
+
+</tr>
+
+`
+
+})
+
+/* DASH */
+
+let estoque=aparelhos.filter(a=>a.status==="Estoque").length
+let vendidos=aparelhos.filter(a=>a.status==="Vendido").length
+
+let cartasAtivas=cartas.filter(c=>!c.mesContemplacao).length
+let cartasContempladas=cartas.filter(c=>c.mesContemplacao).length
+
+document.getElementById("estoqueAparelhos").innerText=estoque
+document.getElementById("vendidos").innerText=vendidos
+
+document.getElementById("cartasAtivas").innerText=cartasAtivas
+document.getElementById("cartasContempladas").innerText=cartasContempladas
+
+document.getElementById("capital").innerText=moeda(capital)
+document.getElementById("lucroAparelhos").innerText=moeda(lucroAparelhos)
+document.getElementById("lucroCartas").innerText=moeda(lucroCartas)
+document.getElementById("lucroTotal").innerText=moeda(lucroCartas+lucroAparelhos)
+
+/* CHART */
+
+let ctx=document.getElementById("grafico")
+
+if(chart)chart.destroy()
+
+chart=new Chart(ctx,{
+type:"doughnut",
+data:{
+labels:["Estoque","Vendidos"],
+datasets:[{data:[estoque,vendidos]}]
+}
+})
+
+}
+
+show("dashboard")
+
+</script>
+
+</body>
+</html>
+```

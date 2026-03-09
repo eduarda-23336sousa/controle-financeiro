@@ -1,28 +1,27 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Dashboard Investimentos</title>
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>Painel Financeiro</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 
 *{
-box-sizing:border-box;
 margin:0;
 padding:0;
-font-family:Arial, Helvetica, sans-serif;
+box-sizing:border-box;
+font-family:system-ui;
 }
 
 body{
 background:#0f172a;
-color:#fff;
+color:white;
 padding:30px;
-}
-
-h1{
-margin-bottom:20px;
 }
 
 .container{
@@ -30,28 +29,32 @@ max-width:1400px;
 margin:auto;
 }
 
+h1{
+margin-bottom:25px;
+}
+
 .cards{
 display:grid;
-grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
 gap:20px;
-margin-bottom:40px;
+margin-bottom:30px;
 }
 
 .card{
 background:#1e293b;
 padding:20px;
-border-radius:10px;
-opacity:.95;
+border-radius:12px;
+box-shadow:0 10px 25px rgba(0,0,0,.5);
 }
 
 .card h3{
-font-size:14px;
+font-size:13px;
 opacity:.7;
-margin-bottom:10px;
+margin-bottom:6px;
 }
 
 .card span{
-font-size:28px;
+font-size:24px;
 font-weight:bold;
 }
 
@@ -67,19 +70,17 @@ margin-top:15px;
 
 th,td{
 padding:10px;
-text-align:left;
 border-bottom:1px solid #334155;
 }
 
 th{
-opacity:.8;
+opacity:.7;
 }
 
 input{
 padding:8px;
 border-radius:6px;
 border:none;
-margin-right:5px;
 }
 
 button{
@@ -95,7 +96,7 @@ button:hover{
 opacity:.9;
 }
 
-.grid-form{
+.form{
 display:flex;
 flex-wrap:wrap;
 gap:8px;
@@ -108,77 +109,59 @@ border-radius:6px;
 font-size:12px;
 }
 
-.estoque{
-background:#334155;
+.estoque{background:#334155;}
+.vendido{background:#16a34a;}
+.ativa{background:#334155;}
+.contemplada{background:#9333ea;}
+
+.lucro{color:#22c55e;}
+.prejuizo{color:#ef4444;}
+
+.chart-box{
+background:#1e293b;
+padding:20px;
+border-radius:12px;
+margin-top:40px;
 }
 
-.vendido{
-background:#16a34a;
-}
-
-.ativa{
-background:#334155;
-}
-
-.contemplada{
-background:#9333ea;
-}
-
-.lucro{
-color:#22c55e;
-font-weight:bold;
-}
-
-.prejuizo{
-color:#ef4444;
-font-weight:bold;
+.export{
+margin-top:10px;
 }
 
 </style>
-
 </head>
 
 <body>
 
 <div class="container">
 
-<h1>Dashboard de Investimentos</h1>
+<h1>Painel Financeiro</h1>
 
 <div class="cards">
 
 <div class="card">
-<h3>Aparelhos em Estoque</h3>
-<span id="estoque">0</span>
-</div>
-
-<div class="card">
-<h3>Aparelhos Vendidos</h3>
-<span id="vendidos">0</span>
-</div>
-
-<div class="card">
-<h3>Cartas Ativas</h3>
-<span id="cartasAtivas">0</span>
-</div>
-
-<div class="card">
-<h3>Cartas Contempladas</h3>
-<span id="cartasContempladas">0</span>
-</div>
-
-<div class="card">
-<h3>Lucro Aparelhos</h3>
-<span id="lucroAparelhos">R$0</span>
-</div>
-
-<div class="card">
-<h3>Lucro Cartas</h3>
-<span id="lucroCartas">R$0</span>
+<h3>Investimento Total</h3>
+<span id="investimento">R$0</span>
 </div>
 
 <div class="card">
 <h3>Lucro Total</h3>
 <span id="lucroTotal">R$0</span>
+</div>
+
+<div class="card">
+<h3>ROI</h3>
+<span id="roi">0%</span>
+</div>
+
+<div class="card">
+<h3>Aparelhos Estoque</h3>
+<span id="estoque">0</span>
+</div>
+
+<div class="card">
+<h3>Cartas Ativas</h3>
+<span id="cartasAtivas">0</span>
 </div>
 
 </div>
@@ -187,7 +170,7 @@ font-weight:bold;
 
 <h2>Aparelhos</h2>
 
-<div class="grid-form">
+<div class="form">
 
 <input id="modelo" placeholder="Modelo">
 <input id="dataCompra" type="date">
@@ -196,6 +179,8 @@ font-weight:bold;
 <button onclick="addAparelho()">Cadastrar</button>
 
 </div>
+
+<button class="export" onclick="exportAparelhos()">Exportar CSV</button>
 
 <table>
 
@@ -221,7 +206,7 @@ font-weight:bold;
 
 <h2>Cartas</h2>
 
-<div class="grid-form">
+<div class="form">
 
 <input id="valorCarta" type="number" placeholder="Valor Carta">
 <input id="adesao" type="number" placeholder="Adesão">
@@ -232,14 +217,16 @@ font-weight:bold;
 
 </div>
 
+<button class="export" onclick="exportCartas()">Exportar CSV</button>
+
 <table>
 
 <thead>
 <tr>
-<th>Valor Carta</th>
+<th>Valor</th>
 <th>Parcela</th>
-<th>Mês Inicial</th>
-<th>Mês Contemplação</th>
+<th>Inicio</th>
+<th>Contemplação</th>
 <th>Total Pago</th>
 <th>Venda</th>
 <th>Lucro</th>
@@ -253,6 +240,14 @@ font-weight:bold;
 </table>
 
 </section>
+
+<div class="chart-box">
+
+<h2>Lucro Mensal</h2>
+
+<canvas id="grafico"></canvas>
+
+</div>
 
 </div>
 
@@ -289,19 +284,16 @@ status:"Estoque"
 })
 
 salvar()
-
 }
 
 function venderAparelho(id){
 
-let valor=prompt("Valor da venda")
+let valor=prompt("Valor venda")
 
-if(!valor)return
+let a=aparelhos.find(a=>a.id==id)
 
-let ap=aparelhos.find(a=>a.id==id)
-
-ap.valorVenda=parseFloat(valor)
-ap.status="Vendido"
+a.valorVenda=parseFloat(valor)
+a.status="Vendido"
 
 salvar()
 
@@ -309,10 +301,10 @@ salvar()
 
 function addCarta(){
 
-let valorCarta=parseFloat(document.getElementById("valorCarta").value)
-let adesao=parseFloat(document.getElementById("adesao").value)
-let parcela=parseFloat(document.getElementById("parcela").value)
-let mesInicio=parseInt(document.getElementById("mesInicio").value)
+let valorCarta=parseFloat(valorCartaInput.value)
+let adesao=parseFloat(adesaoInput.value)
+let parcela=parseFloat(parcelaInput.value)
+let mesInicio=parseInt(mesInicioInput.value)
 
 cartas.push({
 id:Date.now(),
@@ -331,8 +323,8 @@ salvar()
 
 function contemplarCarta(id){
 
-let mes=prompt("Mês da contemplação")
-let venda=prompt("Valor da venda da carta")
+let mes=prompt("Mês contemplação")
+let venda=prompt("Valor venda")
 
 let c=cartas.find(c=>c.id==id)
 
@@ -344,27 +336,111 @@ salvar()
 
 }
 
+function calcularMensal(){
+
+let meses={}
+
+aparelhos.forEach(a=>{
+
+if(a.status==="Vendido"){
+
+let d=new Date(a.dataCompra)
+let chave=d.getFullYear()+"-"+(d.getMonth()+1)
+
+let lucro=a.valorVenda-a.valorPago
+
+if(!meses[chave])meses[chave]=0
+
+meses[chave]+=lucro
+
+}
+
+})
+
+cartas.forEach(c=>{
+
+if(c.status==="Contemplada"){
+
+let chave="Mes-"+c.mesContemplacao
+
+let mesesPagos=c.mesContemplacao-c.mesInicio
+
+let pago=c.adesao+(c.parcela*mesesPagos)
+
+let lucro=c.valorVenda-pago
+
+if(!meses[chave])meses[chave]=0
+
+meses[chave]+=lucro
+
+}
+
+})
+
+return meses
+
+}
+
+let chart
+
+function grafico(){
+
+let dados=calcularMensal()
+
+let labels=[]
+let valores=[]
+
+Object.keys(dados).forEach(m=>{
+
+labels.push(m)
+valores.push(dados[m])
+
+})
+
+if(chart)chart.destroy()
+
+chart=new Chart(
+document.getElementById("grafico"),
+{
+type:"bar",
+data:{
+labels:labels,
+datasets:[
+{
+label:"Lucro Mensal",
+data:valores
+}
+]
+}
+})
+
+}
+
 function render(){
 
+let investimento=0
+let lucroTotal=0
 let estoque=0
-let vendidos=0
-let lucroAparelhos=0
+let cartasAtivas=0
 
-let tabelaAparelhos=""
+let tabela=""
 
 aparelhos.forEach(a=>{
 
 let lucro=0
 
+investimento+=a.valorPago
+
 if(a.status==="Vendido"){
+
 lucro=a.valorVenda-a.valorPago
-lucroAparelhos+=lucro
-vendidos++
+lucroTotal+=lucro
+
 }else{
 estoque++
 }
 
-tabelaAparelhos+=`
+tabela+=`
 
 <tr>
 
@@ -384,9 +460,10 @@ ${a.status==="Vendido"?format(lucro):"-"}
 </td>
 
 <td>
+
 ${a.status==="Estoque"?
-`<button onclick="venderAparelho(${a.id})">Vender</button>`
-:""}
+`<button onclick="venderAparelho(${a.id})">Vender</button>`:""}
+
 </td>
 
 </tr>
@@ -395,13 +472,9 @@ ${a.status==="Estoque"?
 
 })
 
-document.getElementById("tabelaAparelhos").innerHTML=tabelaAparelhos
+tabelaAparelhos.innerHTML=tabela
 
-let cartasAtivas=0
-let cartasContempladas=0
-let lucroCartas=0
-
-let tabelaCartas=""
+let tabelaC=""
 
 cartas.forEach(c=>{
 
@@ -416,8 +489,7 @@ totalPago=c.adesao+(c.parcela*meses)
 
 lucro=c.valorVenda-totalPago
 
-lucroCartas+=lucro
-cartasContempladas++
+lucroTotal+=lucro
 
 }else{
 
@@ -425,19 +497,15 @@ cartasAtivas++
 
 }
 
-tabelaCartas+=`
+tabelaC+=`
 
 <tr>
 
 <td>${format(c.valorCarta)}</td>
 <td>${format(c.parcela)}</td>
-
 <td>${c.mesInicio}</td>
-
 <td>${c.mesContemplacao||"-"}</td>
-
 <td>${totalPago?format(totalPago):"-"}</td>
-
 <td>${c.valorVenda?format(c.valorVenda):"-"}</td>
 
 <td class="${lucro>=0?"lucro":"prejuizo"}">
@@ -451,9 +519,10 @@ ${c.status}
 </td>
 
 <td>
+
 ${c.status==="Ativa"?
-`<button onclick="contemplarCarta(${c.id})">Contemplar</button>`
-:""}
+`<button onclick="contemplarCarta(${c.id})">Contemplar</button>`:""}
+
 </td>
 
 </tr>
@@ -462,18 +531,35 @@ ${c.status==="Ativa"?
 
 })
 
-document.getElementById("tabelaCartas").innerHTML=tabelaCartas
+tabelaCartas.innerHTML=tabelaC
 
-document.getElementById("estoque").innerText=estoque
-document.getElementById("vendidos").innerText=vendidos
-document.getElementById("cartasAtivas").innerText=cartasAtivas
-document.getElementById("cartasContempladas").innerText=cartasContempladas
+let roi=((lucroTotal/investimento)*100)||0
 
-document.getElementById("lucroAparelhos").innerText=format(lucroAparelhos)
-document.getElementById("lucroCartas").innerText=format(lucroCartas)
-document.getElementById("lucroTotal").innerText=format(lucroAparelhos+lucroCartas)
+investimentoEl.innerText=format(investimento)
+lucroTotalEl.innerText=format(lucroTotal)
+roiEl.innerText=roi.toFixed(1)+"%"
+
+estoqueEl.innerText=estoque
+cartasAtivasEl.innerText=cartasAtivas
+
+grafico()
 
 }
+
+const tabelaAparelhos=document.getElementById("tabelaAparelhos")
+const tabelaCartas=document.getElementById("tabelaCartas")
+
+const investimentoEl=document.getElementById("investimento")
+const lucroTotalEl=document.getElementById("lucroTotal")
+const roiEl=document.getElementById("roi")
+
+const estoqueEl=document.getElementById("estoque")
+const cartasAtivasEl=document.getElementById("cartasAtivas")
+
+const valorCartaInput=document.getElementById("valorCarta")
+const adesaoInput=document.getElementById("adesao")
+const parcelaInput=document.getElementById("parcela")
+const mesInicioInput=document.getElementById("mesInicio")
 
 render()
 
